@@ -20,6 +20,14 @@ npm run preview
 
 `npm run lint` lance ESLint.
 
+## Installer Beaurn sur mobile
+
+Le site est une PWA : le manifeste, les icônes et le service worker sont servis avec le site. Le service worker précache la page, ses fichiers de production, les images et les icônes pour permettre le lancement hors ligne après une première visite connectée.
+
+L’installation nécessite une adresse HTTPS. Sur Android, ouvrir le site dans Chrome puis choisir « Installer l’application » ou utiliser le bouton d’installation du menu Beaurn. Sur iPhone, ouvrir le site dans Safari, toucher « Partager », puis « Ajouter à l’écran d’accueil » et activer « Ouvrir comme app ».
+
+Le workflow `.github/workflows/deploy-pages.yml` compile l’application avec le sous-chemin `/BEAURN/` et la publie sur GitHub Pages à chaque push sur `main`. Pour l’activer, sélectionner **Settings → Pages → Source → GitHub Actions** dans le dépôt. L’adresse publiée sera `https://pauldjeuda.github.io/BEAURN/` une fois le workflow terminé. Pour un hébergement à la racine d’un autre domaine, laisser `VITE_BASE_PATH=/`.
+
 ## Pages disponibles
 
 - `/` — accueil et sections philosophie, valeurs, cours, planning, formules, équipe, expérience et contact

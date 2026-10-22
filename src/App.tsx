@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Link, Route, Routes, useLocation, useNavigationType, useParams } from 'react-router-dom'
-import { ArrowDown, ArrowRight, BadgeInfo, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, Flower2, Heart, Info, Instagram, MapPin, Menu, Phone, Share2, UserRound, X } from 'lucide-react'
+import { ArrowDown, ArrowRight, BadgeInfo, CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, Download, Flower2, Heart, Info, Instagram, MapPin, Menu, Phone, Share2, UserRound, X } from 'lucide-react'
 
 const SITE = {
   name: 'Beaurn Wellness Studio', slogan: 'Beaurn to live, Beaurn to be yourself.', tagline: 'Reviens à toi.',
@@ -25,30 +25,70 @@ const courses = [
   { name: 'Yoga', slug: 'yoga', desc: 'Apaise le mental et assouplit le corps.', duration: 60, level: 'Tous niveaux', art: 'yoga' },
 ]
 const photoAssets: Record<string, string> = {
-  hero: '/images/pilates-flow.webp',
-  stretch: '/images/pilates-side.webp',
-  'course-0': '/images/pilates-boat.webp',
-  'course-1': '/images/pilates-rest.webp',
-  'course-2': '/images/pilates-side.webp',
-  'course-3': '/images/yoga-meditation.webp',
-  'planning-bg': '/images/studio-mats.webp',
-  'coach-0': '/images/coach-aisha.webp',
-  'coach-1': '/images/coach-aurelie.webp',
-  'coach-2': '/images/coach-carla.webp',
-  'coach-3': '/images/coach-hilarion.webp',
-  'coach-4': '/images/yoga-meditation.webp',
-  'exp-0': '/images/studio-rollers.webp',
-  'exp-1': '/images/mat-bottle.webp',
-  'exp-2': '/images/community-duo.webp',
-  'exp-3': '/images/pilates-split.webp',
-  'exp-4': '/images/group-meditation.webp',
-  'exp-5': '/images/studio-mats.webp',
-  venue: '/images/studio-corner.webp',
+  hero: `${import.meta.env.BASE_URL}images/pilates-flow.webp`,
+  stretch: `${import.meta.env.BASE_URL}images/pilates-side.webp`,
+  'course-0': `${import.meta.env.BASE_URL}images/pilates-boat.webp`,
+  'course-1': `${import.meta.env.BASE_URL}images/pilates-rest.webp`,
+  'course-2': `${import.meta.env.BASE_URL}images/pilates-side.webp`,
+  'course-3': `${import.meta.env.BASE_URL}images/yoga-meditation.webp`,
+  'planning-bg': `${import.meta.env.BASE_URL}images/studio-mats.webp`,
+  'coach-0': `${import.meta.env.BASE_URL}images/coach-aisha.webp`,
+  'coach-1': `${import.meta.env.BASE_URL}images/coach-aurelie.webp`,
+  'coach-2': `${import.meta.env.BASE_URL}images/coach-carla.webp`,
+  'coach-3': `${import.meta.env.BASE_URL}images/coach-hilarion.webp`,
+  'coach-4': `${import.meta.env.BASE_URL}images/yoga-meditation.webp`,
+  'exp-0': `${import.meta.env.BASE_URL}images/studio-rollers.webp`,
+  'exp-1': `${import.meta.env.BASE_URL}images/mat-bottle.webp`,
+  'exp-2': `${import.meta.env.BASE_URL}images/community-duo.webp`,
+  'exp-3': `${import.meta.env.BASE_URL}images/pilates-split.webp`,
+  'exp-4': `${import.meta.env.BASE_URL}images/group-meditation.webp`,
+  'exp-5': `${import.meta.env.BASE_URL}images/studio-mats.webp`,
+  venue: `${import.meta.env.BASE_URL}images/studio-corner.webp`,
 }
 const external = { target: '_blank', rel: 'noopener noreferrer' } as const
+type InstallPromptEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }> }
 
 function Logo({ light = false }: { light?: boolean }) { return <Link to="/" className={`logo ${light ? 'logo-light' : ''}`} aria-label="Beaurn Wellness Studio, accueil"><span>BEAURN</span><small>WELLNESS STUDIO</small></Link> }
 function Button({ children, to, href, variant = 'primary', className = '' }: { children: React.ReactNode; to?: string; href?: string; variant?: string; className?: string }) { const cls = `button ${variant} ${className}`; return to ? <Link className={cls} to={to}>{children}</Link> : <a className={cls} href={href} {...(href?.startsWith('http') ? external : {})}>{children}</a> }
+function InstallAppButton() {
+  const [installPrompt, setInstallPrompt] = useState<InstallPromptEvent | null>(null)
+  const [installed, setInstalled] = useState(false)
+  const guide = useRef<HTMLDialogElement>(null)
+  const isAppleMobile = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  const isSecure = window.isSecureContext
+  const isProduction = import.meta.env.PROD
+  useEffect(() => {
+    const displayMode = window.matchMedia('(display-mode: standalone)')
+    const refreshInstalled = () => setInstalled(displayMode.matches || Boolean((navigator as Navigator & { standalone?: boolean }).standalone))
+    const onPrompt = (event: Event) => { event.preventDefault(); setInstallPrompt(event as InstallPromptEvent) }
+    const onInstalled = () => { setInstalled(true); setInstallPrompt(null) }
+    refreshInstalled()
+    displayMode.addEventListener('change', refreshInstalled)
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => { displayMode.removeEventListener('change', refreshInstalled); window.removeEventListener('beforeinstallprompt', onPrompt); window.removeEventListener('appinstalled', onInstalled) }
+  }, [])
+  if (installed) return null
+  const handleInstall = async () => {
+    if (!isSecure || !isProduction || !installPrompt) { guide.current?.showModal(); return }
+    const prompt = installPrompt
+    setInstallPrompt(null)
+    await prompt.prompt()
+    const choice = await prompt.userChoice
+    if (choice.outcome === 'accepted') setInstalled(true)
+  }
+  return <>
+    <button type="button" className="button outline pwa-install-button" onClick={handleInstall}><Download size={15}/>{installPrompt ? 'Installer Beaurn' : isAppleMobile ? 'Ajouter Beaurn à l’écran d’accueil' : 'Comment installer Beaurn'}</button>
+    <dialog ref={guide} className="pwa-install-guide" aria-labelledby="pwa-guide-title" onClick={event => { if (event.target === guide.current) guide.current?.close() }}>
+      <div className="pwa-guide-content"><button type="button" className="pwa-guide-close" aria-label="Fermer" onClick={() => guide.current?.close()}><X size={19}/></button><span className="eyebrow">BEAURN SUR VOTRE TÉLÉPHONE</span><h2 id="pwa-guide-title">Installer l’application</h2>
+        {!isSecure && <p className="pwa-guide-warning">Cette adresse n’est pas sécurisée. Ouvrez la version du site en HTTPS pour pouvoir l’installer.</p>}
+        {isSecure && !isProduction && <p className="pwa-guide-warning">Cette prévisualisation locale n’est pas la version installable. Publiez le site sur une adresse HTTPS, puis ouvrez cette adresse sur votre téléphone.</p>}
+        {isSecure && isProduction && (isAppleMobile ? <p>Dans Safari, touchez <strong>Partager</strong>, puis <strong>Ajouter à l’écran d’accueil</strong>. Activez ensuite <strong>Ouvrir comme app</strong>.</p> : <p>Dans Chrome, ouvrez le menu <strong>⋮</strong>, puis choisissez <strong>Installer l’application</strong> ou <strong>Ajouter à l’écran d’accueil</strong>.</p>)}
+        {isSecure && isProduction && <p className="pwa-guide-note">L’installation ajoute Beaurn à votre écran d’accueil et ouvre le site dans une fenêtre dédiée.</p>}
+      </div>
+    </dialog>
+  </>
+}
 function SectionTitle({ eyebrow, children, id }: { eyebrow: string; children: React.ReactNode; id?: string }) { return <div className="section-title"><span className="eyebrow">{eyebrow}</span><h2 id={id}>{children}</h2></div> }
 function Photo({ label, className = '', art = 'exp-0', eager = false }: { label: string; className?: string; art?: string; eager?: boolean }) { return <div className={`photo photo-${art} ${className}`}><img src={photoAssets[art] ?? photoAssets['exp-0']} alt={label} loading={eager ? 'eager' : 'lazy'} decoding="async" fetchPriority={eager ? 'high' : 'auto'} /></div> }
 function Header() {
@@ -58,7 +98,7 @@ function Header() {
   useEffect(() => { if (open) panel.current?.querySelector<HTMLElement>('a')?.focus(); else if (wasOpen.current) trigger.current?.focus(); wasOpen.current = open; const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false); if (open && e.key === 'Tab' && panel.current) { const focusable = Array.from(panel.current.querySelectorAll<HTMLElement>('a,button')); const first = focusable[0], last = focusable[focusable.length - 1]; if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last?.focus() } else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus() } } }; window.addEventListener('keydown', key); return () => window.removeEventListener('keydown', key) }, [open])
   const nav = [['Accueil', '/#accueil'], ['Nos cours', '/#cours'], ["L'équipe", '/#equipe'], ['Tarifs', '/#tarifs'], ['À propos', '/#a-propos'], ['Contact', '/#contact']]
   return <header className="header"><div className="container header-inner"><Logo /><nav className="desktop-nav" aria-label="Navigation principale">{nav.map(([label, href]) => <Link key={label} to={href}>{label}</Link>)}</nav><div className="header-actions"><a className="login" href={SITE.login} {...external}>Se connecter</a><Button href={SITE.events} className="header-cta">Réserver une séance <ArrowRight size={15} /></Button></div><button ref={trigger} className="burger" aria-label={open ? 'Fermer le menu' : 'Ouvrir le menu'} aria-expanded={open} aria-controls="mobile-navigation" onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button></div>
-    <div ref={panel} id="mobile-navigation" className={`mobile-panel ${open ? 'is-open' : ''}`} aria-hidden={!open}><nav aria-label="Navigation mobile">{nav.map(([label, href]) => <Link key={label} to={href} onClick={() => setOpen(false)}>{label}</Link>)}</nav><Button href={SITE.events}>Réserver une séance <ArrowRight size={16} /></Button><a className="login" href={SITE.login} {...external}>Se connecter</a><a className="social-mini" href={SITE.instagram} {...external}><Instagram size={17} /> Instagram</a></div>
+    <div ref={panel} id="mobile-navigation" className={`mobile-panel ${open ? 'is-open' : ''}`} aria-hidden={!open}><nav aria-label="Navigation mobile">{nav.map(([label, href]) => <Link key={label} to={href} onClick={() => setOpen(false)}>{label}</Link>)}</nav><Button href={SITE.events}>Réserver une séance <ArrowRight size={16} /></Button><InstallAppButton/><a className="login" href={SITE.login} {...external}>Se connecter</a><a className="social-mini" href={SITE.instagram} {...external}><Instagram size={17} /> Instagram</a></div>
   </header>
 }
 function Footer() {
@@ -131,4 +171,4 @@ function GalleryPage() { const [selected,setSelected]=useState<number|null>(null
 function LegalPage({ terms=false }: {terms?:boolean}) { const title=terms?'Conditions générales':'Politique de confidentialité'; const link=terms?SITE.terms:SITE.privacy; return <div className="inner-page legal"><div className="container"><p className="breadcrumbs"><Link to="/">Accueil</Link> / {title}</p><SectionTitle eyebrow="BEAURN WELLNESS STUDIO">{title}</SectionTitle><p>Cette page présente un gabarit à compléter et à valider par Beaurn Wellness Studio.</p><p><strong>Contenu à valider par Beaurn Wellness Studio.</strong> Les informations définitives relatives à {terms?'l’utilisation des services, aux réservations et aux paiements':'la collecte, l’utilisation et la conservation des données personnelles'} devront être ajoutées avant publication.</p><h2>Version actuelle</h2><p>Consultez également le document actuellement hébergé par Reservio :</p><a className="text-link" href={link} {...external}>{title} sur Reservio <ArrowRight size={15}/></a><h2>Contact</h2><p>Beaurn Wellness Studio · Camp SIC, Titi Garage, Yaoundé, Cameroun · <a href={`tel:${SITE.tel}`}>{SITE.phone}</a></p></div></div> }
 function NotFound() { return <div className="inner-page"><div className="container not-found"><span className="eyebrow">PAGE INTROUVABLE</span><h1>On se retrouve à l'accueil ?</h1><Button to="/">Retour à l'accueil <ArrowRight size={15}/></Button></div></div> }
 function AppRoutes() { return <Layout><Routes><Route path="/" element={<Home/>}/><Route path="/planning" element={<PlanningPage/>}/><Route path="/equipe" element={<TeamPage/>}/><Route path="/equipe/:slug" element={<CoachPage/>}/><Route path="/galerie" element={<GalleryPage/>}/><Route path="/politique-de-confidentialite" element={<LegalPage/>}/><Route path="/conditions-generales" element={<LegalPage terms/>}/><Route path="*" element={<NotFound/>}/></Routes></Layout> }
-export default function App() { return <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AppRoutes/></BrowserRouter> }
+export default function App() { return <BrowserRouter basename={import.meta.env.BASE_URL} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><AppRoutes/></BrowserRouter> }

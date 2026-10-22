@@ -13,7 +13,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/service-worker.js').catch((error: unknown) => {
+    const appBase = new URL(import.meta.env.BASE_URL, window.location.origin)
+    const workerUrl = new URL('service-worker.js', appBase)
+    navigator.serviceWorker.register(workerUrl, { scope: appBase.pathname, updateViaCache: 'none' }).catch((error: unknown) => {
       console.error('Impossible d’activer le mode hors ligne Beaurn.', error)
     })
   })
