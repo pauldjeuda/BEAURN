@@ -1,0 +1,2 @@
+import type { Config } from 'tailwindcss'
+export default { content: ['./index.html', './src/**/*.{ts,tsx}'], theme: { extend: { colors: { cream: '#FAF6F0', 'cream-soft': '#F6EFE6', sand: '#F1E7DA', 'sand-deep': '#E6D5C1', peach: '#F3E1D1', 'brown-900': '#3F2A21', 'brown-700': '#5A3E32', 'brown-500': '#7A5C4D', 'taupe-600': '#5F534B', 'taupe-400': '#9A8D83', 'white-warm': '#FFFDFB' }, fontFamily: { serif: ['Cormorant Garamond', 'serif'], sans: ['DM Sans', 'sans-serif'] } } }, plugins: [] } satisfies Config
